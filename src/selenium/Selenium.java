@@ -253,7 +253,7 @@ public class Selenium {
 
         } finally {
 
-            //driver.close();
+            driver.close();
         }
 
     }
@@ -287,6 +287,8 @@ public class Selenium {
 
         if (!file.exists()) {
             try {
+                //파일 이름엔 특수문자가 들어갈 수 없음(예외처리 필요)
+                
                 file.mkdir();
             } catch (Exception e) {
                 System.out.print("폴더 생성 실패");
