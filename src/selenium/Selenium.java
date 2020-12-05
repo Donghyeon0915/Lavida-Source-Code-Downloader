@@ -27,6 +27,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 /**
@@ -108,7 +109,7 @@ public class Selenium {
      * @param args the command line arguments
      */
     private WebDriver driver;
-    private WebDriverWait wait;
+    private final WebDriverWait wait;
     //Properties
     public static final String WEB_DRIVER_ID = "webdriver.chrome.driver";
     public static final String WEB_DRIVER_PATH = "C:\\Users\\cyber\\Downloads\\Selenium\\chromedriver.exe";
@@ -128,11 +129,12 @@ public class Selenium {
 
         //System Property SetUp
         System.setProperty(WEB_DRIVER_ID, WEB_DRIVER_PATH);
-
+        
         //Driver SetUp
         driver = new ChromeDriver();
         base_url = "https://lavida.us/index.php";
         robot = new Robot();
+        wait = new WebDriverWait(driver, 10);
     }
 
     public void lavidaLogin(){
@@ -161,7 +163,7 @@ public class Selenium {
             WebElement solvedList = driver.findElement(By.xpath("/html/body/div[3]/div/div[2]/div[2]/table[2]")).findElement(By.xpath("/html/body/div[3]/div/div[2]/div[2]/table[2]/tbody/tr/td"));
             List<WebElement> solved = solvedList.findElements(By.tagName("a"));
 
-            System.out.print("solved list 개수 : " + solved.size());
+            System.out.println("solved list 개수 : " + solved.size());
 
             ArrayList<String> links = new ArrayList<>();
             solved.forEach(webElement -> {
@@ -176,24 +178,26 @@ public class Selenium {
 
                 //문제 페이지로 이동
                 String href = link;
-                //System.out.print(href);
                 pbInfo.setProblemNum(href.substring(href.length() - 4));
                 driver.get(href);
 
-                Thread_Sleep(2000);
+                //Thread_Sleep(2000);
 
                 //By.xpath("/html/body/div[4]/div/div[1]/div[1]/h2")
-                String problemName = driver.findElement(By.cssSelector("body > div.container > div > div.panel.panel-default > div.panel-heading > h2")).getText();
+                //String problemName = driver.findElement(By.cssSelector("body > div.container > div > div.panel.panel-default > div.panel-heading > h2")).getText();
+                WebElement problemPage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("body > div.container > div > div.panel.panel-default > div.panel-heading > h2")));
+                String problemName = problemPage.getText();
+                        
                 pbInfo.setProblemName(problemName.substring(0, problemName.length() - 26));
 
                 //My Submission으로 이동
                 subUrl = new StringBuilder("https://lavida.us/status.php?user_id=20183188&problem_id=" + pbInfo.getProblemNum());
                 driver.get(subUrl.toString());
-                Thread_Sleep(2000);
                 
                 // 채점 결과 테이블 찾기
-                WebElement resultTable = driver.findElement(By.xpath("/html/body/div[3]/div/table"));
-
+                //driver.findElement(By.xpath("/html/body/div[3]/div/table"));
+                WebElement resultTable = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("body > div.container > div > table")));
+                        
                 //채점 결과 테이블의 tr 태그를 가져옴
                 List<WebElement> resultTr = resultTable.findElement(By.tagName("tbody")).findElements(By.tagName("tr"));
 
@@ -231,8 +235,9 @@ public class Selenium {
                   * 소스코드 복사
                      */
                     robot.mouseMove(400, 500);
-                    robot.delay(3000);
-
+                    
+                    WebElement sourceArea = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("body > div.container > div > div")));
+                    
                     releaseLeftMouse();
                     ctrl_A();
                     ctrl_C();
