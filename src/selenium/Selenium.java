@@ -278,17 +278,18 @@ public class Selenium {
     }
 
     public void saveSourceCode(String sourceCode, ProblemInfo pbinfo) {
-        String folder = pbinfo.getProblemName().trim();
+        String[] puncts = {"\\", "/", ":", "*", "?", "<", ">", "|", "\""};
+        String folder = pbinfo.getProblemName().trim().replaceAll("\\p{Punct}", "");
         String fileExtension = pbinfo.getLanguage().matches("^(C\\+\\+)\\d*$") ? "cpp" : pbinfo.getLanguage();
-        String fileName = pbinfo.getProblemName().substring(6).trim();
-
+        String fileName = pbinfo.getProblemName().substring(6).trim().replaceAll("\\p{Punct}", "");;
+        
         String path = "C:\\Users\\cyber\\Downloads\\Lavida Online Judge\\" + folder;
         File file = new File(path);
 
         if (!file.exists()) {
             try {
                 //파일 이름엔 특수문자가 들어갈 수 없음(예외처리 필요)
-                
+                // \ / : * ? " < > | 는 폴더, 파일 이름으로 쓸 수 없음
                 file.mkdir();
             } catch (Exception e) {
                 System.out.print("폴더 생성 실패");
@@ -333,9 +334,10 @@ public class Selenium {
     }
 
     public void releaseLeftMouse() {
+        robot.delay(500);
         robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
         robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-        robot.delay(100);
+        
     }
 
     public void ctrl_A() {
