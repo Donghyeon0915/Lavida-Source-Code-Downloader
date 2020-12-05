@@ -36,19 +36,19 @@ import org.openqa.selenium.support.ui.WebDriverWait;
  */
 class AcceptedProblem {
 
-    WebElement link;
+    String link;
     String language;
 
-    public AcceptedProblem(WebElement link, String language) {
+    public AcceptedProblem(String link, String language) {
         this.link = link;
         this.language = language;
     }
 
-    public WebElement getLink() {
+    public String getLink() {
         return link;
     }
 
-    public void setLink(WebElement link) {
+    public void setLink(String link) {
         this.link = link;
     }
 
@@ -112,7 +112,7 @@ public class Selenium {
     private final WebDriverWait wait;
     //Properties
     public static final String WEB_DRIVER_ID = "webdriver.chrome.driver";
-    public static final String WEB_DRIVER_PATH = "C:\\Users\\cyber\\Downloads\\Selenium\\chromedriver.exe";
+    public static final String WEB_DRIVER_PATH = "src\\MyLibrary\\chromedriver.exe";
     StringBuilder subUrl;
     Robot robot;
 
@@ -129,32 +129,32 @@ public class Selenium {
 
         //System Property SetUp
         System.setProperty(WEB_DRIVER_ID, WEB_DRIVER_PATH);
-        
+
         //Driver SetUp
         driver = new ChromeDriver();
-        base_url = "https://lavida.us/index.php";
+        base_url = "https://lavida.us/";
         robot = new Robot();
         wait = new WebDriverWait(driver, 10);
     }
 
-    public void lavidaLogin(){
+    public void lavidaLogin() {
         driver.get(base_url);
 
-            WebElement id = driver.findElement(By.xpath("//*[@id=\"user_id\"]"));
-            id.sendKeys("20183188");
+        WebElement id = driver.findElement(By.xpath("//*[@id=\"user_id\"]"));
+        id.sendKeys("20183188");
 
-            WebElement pw = driver.findElement(By.xpath("//*[@id=\"password\"]"));
-            pw.sendKeys("blue795132486");
-            pw.sendKeys("\n");
+        WebElement pw = driver.findElement(By.xpath("//*[@id=\"password\"]"));
+        pw.sendKeys("blue795132486");
+        pw.sendKeys("\n");
 
     }
-    
+
     public void crawl() throws InterruptedException {
 
         try {
             //get page (= 브라우저에서 url을 주소창에 넣은 후 request 한 것과 같다)
             lavidaLogin();
-            
+
             //내 정보 페이지로 이동
             WebElement myPage = driver.findElement(By.xpath("/html/body/div[2]/div/div[2]/ul[2]/li[1]/a"));
             myPage.click();
@@ -182,22 +182,21 @@ public class Selenium {
                 driver.get(href);
 
                 //Thread_Sleep(2000);
-
                 //By.xpath("/html/body/div[4]/div/div[1]/div[1]/h2")
                 //String problemName = driver.findElement(By.cssSelector("body > div.container > div > div.panel.panel-default > div.panel-heading > h2")).getText();
                 WebElement problemPage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("body > div.container > div > div.panel.panel-default > div.panel-heading > h2")));
                 String problemName = problemPage.getText();
-                        
+
                 pbInfo.setProblemName(problemName.substring(0, problemName.length() - 26));
 
                 //My Submission으로 이동
                 subUrl = new StringBuilder("https://lavida.us/status.php?user_id=20183188&problem_id=" + pbInfo.getProblemNum());
                 driver.get(subUrl.toString());
-                
+
                 // 채점 결과 테이블 찾기
                 //driver.findElement(By.xpath("/html/body/div[3]/div/table"));
                 WebElement resultTable = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("body > div.container > div > table")));
-                        
+
                 //채점 결과 테이블의 tr 태그를 가져옴
                 List<WebElement> resultTr = resultTable.findElement(By.tagName("tbody")).findElements(By.tagName("tr"));
 
@@ -222,33 +221,40 @@ public class Selenium {
                 //acceptedList엔 여러개의 요소가 들어있을 수 있음 (여러 언어로 문제를 맞췄을 경우)
                 //그러므로 accpetedList.get(i)로 반복문 돌려야함
                 //같은 언어로 여러번 풀었을 경우 중복을 제거해주어야한다.
-                
                 int acceptedListSize = acceptedList.size();
 
-                for (int i = 0; i < acceptedListSize; i++) {
+                String mainHanlder = driver.getWindowHandle();
 
-                    acceptedList.get(i).click();
+                // 클릭해서 넘어가는 순간 driver 바꿔주고 for문 마지막에서 driver.switchTo로 처음 탭으로 변경
+                for (int i = 0; i < acceptedListSize; i++) {
+                    String showSource = acceptedList.get(i).getAttribute("href");
                     String language = acceptedList.get(i).getText();
                     pbInfo.setLanguage(language);
 
+                    acceptedList.get(i).click();
+                    changeTab();
                     /*
                   * 소스코드 복사
                      */
                     robot.mouseMove(400, 500);
-                    
-                    WebElement sourceArea = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("body > div.container > div > div")));
-                    
-                    releaseLeftMouse();
-                    ctrl_A();
-                    ctrl_C();
 
-                    saveSourceCode(getClipBoard(), pbInfo);
+                    WebElement sourceArea = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("body > div.container > div > div")));
+                    String sourceCode = sourceArea.findElement(By.cssSelector("textarea")).getAttribute("textContent"); 
+                    
+                    
+//                    releaseLeftMouse();
+//                    ctrl_A();
+//                    ctrl_C();
+
+                    saveSourceCode(sourceCode, pbInfo);
+
+                    driver.switchTo().window(mainHanlder);
                 }
-                
+
                 closeTab();
+
             });
         } catch (Exception e) {
-
             e.printStackTrace();
 
         } finally {
@@ -258,14 +264,25 @@ public class Selenium {
 
     }
 
+    /*
+    * 새 탭을 띄울 때마다 모든 Handler를 받아와서 항상 마지막 Handler로 driver switch
+     */
+    public void changeTab() {
+        Set<String> handlesSet = driver.getWindowHandles();
+        List<String> handlesList = new ArrayList<>(handlesSet);
+
+        driver.switchTo().window(handlesList.get(handlesList.size() - 1));
+    }
+
     public void closeTab() {
         Set<String> handlesSet = driver.getWindowHandles();
         List<String> handlesList = new ArrayList<>(handlesSet);
+
         for (int i = 1; i < handlesList.size(); i++) {
             driver.switchTo().window(handlesList.get(i));
             driver.close();
         }
-        
+
         driver.switchTo().window(handlesList.get(0));
     }
 
@@ -282,8 +299,8 @@ public class Selenium {
         String folder = pbinfo.getProblemName().trim().replaceAll("\\p{Punct}", "");
         String fileExtension = pbinfo.getLanguage().matches("^(C\\+\\+)\\d*$") ? "cpp" : pbinfo.getLanguage();
         String fileName = pbinfo.getProblemName().substring(6).trim().replaceAll("\\p{Punct}", "");;
-        
-        String path = "C:\\Users\\cyber\\Downloads\\Lavida Online Judge\\" + folder;
+
+        String path = "..\\Lavida Online Judge\\" + folder;
         File file = new File(path);
 
         if (!file.exists()) {
@@ -337,7 +354,7 @@ public class Selenium {
         robot.delay(500);
         robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
         robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-        
+
     }
 
     public void ctrl_A() {
