@@ -227,25 +227,17 @@ public class Selenium {
 
                 // 클릭해서 넘어가는 순간 driver 바꿔주고 for문 마지막에서 driver.switchTo로 처음 탭으로 변경
                 for (int i = 0; i < acceptedListSize; i++) {
-                    String showSource = acceptedList.get(i).getAttribute("href");
                     String language = acceptedList.get(i).getText();
                     pbInfo.setLanguage(language);
 
                     acceptedList.get(i).click();
                     changeTab();
                     /*
-                  * 소스코드 복사
+                     * 소스코드 가져오기
                      */
-                    robot.mouseMove(400, 500);
-
                     WebElement sourceArea = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("body > div.container > div > div")));
                     String sourceCode = sourceArea.findElement(By.cssSelector("textarea")).getAttribute("textContent"); 
-                    
-                    
-//                    releaseLeftMouse();
-//                    ctrl_A();
-//                    ctrl_C();
-
+ 
                     saveSourceCode(sourceCode, pbInfo);
 
                     driver.switchTo().window(mainHanlder);
@@ -294,11 +286,10 @@ public class Selenium {
         }
     }
 
-    public void saveSourceCode(String sourceCode, ProblemInfo pbinfo) {
-        String[] puncts = {"\\", "/", ":", "*", "?", "<", ">", "|", "\""};
-        String folder = pbinfo.getProblemName().trim().replaceAll("\\p{Punct}", "");
+    public void saveSourceCode(String sourceCode, ProblemInfo pbinfo) {        
+        String folder = pbinfo.getProblemName().trim().replaceAll("[\\/:*?\"<>|]", "");
         String fileExtension = pbinfo.getLanguage().matches("^(C\\+\\+)\\d*$") ? "cpp" : pbinfo.getLanguage();
-        String fileName = pbinfo.getProblemName().substring(6).trim().replaceAll("\\p{Punct}", "");;
+        String fileName = pbinfo.getProblemName().substring(6).trim().replaceAll("\\p{Punct}", "");
 
         String path = "..\\Lavida Online Judge\\" + folder;
         File file = new File(path);
