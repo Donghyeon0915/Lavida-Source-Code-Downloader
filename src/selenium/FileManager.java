@@ -15,8 +15,9 @@ import java.io.IOException;
  * @author Donghyeon <20183188>
  */
 public class FileManager {
-    
+
     public static void saveSourceCode(String sourceCode, ProblemInfo pbinfo) {
+        // \ / : * ? " < > | 는 폴더, 파일 이름으로 쓸 수 없음
         String folder = pbinfo.getProblemName().trim().replaceAll("[\\/:*?\"<>|]", "");
         String fileExtension = pbinfo.getLanguage().matches("^(C\\+\\+)\\d*$") ? "cpp" : pbinfo.getLanguage();
         String fileName = pbinfo.getProblemName().substring(6).trim().replaceAll("\\p{Punct}", "");
@@ -33,12 +34,10 @@ public class FileManager {
             e.printStackTrace();
         }
     }
-    
+
     public static void makeDirectory(File file) {
         if (!file.exists()) {
             try {
-                //파일 이름엔 특수문자가 들어갈 수 없음(예외처리 필요)
-                // \ / : * ? " < > | 는 폴더, 파일 이름으로 쓸 수 없음
                 file.mkdirs();
             } catch (Exception e) {
                 System.out.print("폴더 생성 실패");
