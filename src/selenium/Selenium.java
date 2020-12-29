@@ -143,7 +143,7 @@ public class Selenium {
 
         try {
             //get page (= 브라우저에서 url을 주소창에 넣은 후 request 한 것과 같다)
-            LavidaManager.lavidaLogin(driver, base_url, "20183188", "blue795132486");
+            LavidaManager.lavidaLogin(driver, base_url, "id", "password");
 
             //내 정보 페이지로 이동
             WebElement myPage = driver.findElement(By.xpath("/html/body/div[2]/div/div[2]/ul[2]/li[1]/a"));
